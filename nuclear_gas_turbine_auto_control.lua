@@ -8,7 +8,10 @@ local rs = component.redstone
 local computer = require("computer")
 local term = require("term")
 
-reactor = component.nc_fission_reactor
+-- reactor = component.nc_fission_reactor
+reactor = component.proxy("c1976424-d94c-4522-90d9-d66013ff587e")
+reactor2 = component.proxy("276c184b-56a5-48b9-a8e2-49c6e70eb62a")
+
 turbine = component.it_gas_turbine
 
 print("-----RESETTING BACKUP-----")
@@ -20,17 +23,36 @@ rs.setBundledOutput(sides.left, colors.black, 0)
 computer.beep(1000, 1)
 
 function totalPowerLevel()
-  return reactor.getEnergyStored()
+  return (reactor.getEnergyStored() + reactor2.getEnergyStored())
 end
 
 function checkPowerSwitch()
-  if rs.getBundledInput(sides.left, colors.orange) > 0 then
+  -- Orange = Reactor1 switch, red = reactor1 input, lime = reactor2 input, purple = reactor 2 input.
+  if rs.getBundledInput(sides.left, colors.orange) > 0 and rs.getBundledInput(sides.left, colors.lime) > 0 then
     rs.setBundledOutput(sides.left, colors.red, 255)
-    print("Reactor status: ON")
-  elseif rs.getBundledInput(sides.left, colors.orange) == 0 then
+    rs.setBundledOutput(sides.left, colors.purple, 255)
+    print("1|----|  2|----| ")
+    print("~|****|~ *|####|*")
+    print(" |----|   |----| ")
+  elseif rs.getBundledInput(sides.left, colors.orange) == 0 and rs.getBundledInput(sides.left, colors.lime) == 0 then
     rs.setBundledOutput(sides.left, colors.red, 0)
-    print("Reactor status: OFF")
-  end
+    rs.setBundledOutput(sides.left, colors.purple, 0)
+    print("1|----|  2|----|")
+    print(" |    |   |    |")
+    print(" |----|   |----|")
+  elseif rs.getBundledInput(sides.left, colors.orange) > 0 and rs.getBundledInput(sides.left, colors.lime) == 0 then 
+    rs.setBundledOutput(sides.left, colors.red, 255)
+    rs.setBundledOutput(sides.left, colors.purple, 0)
+    print("1|----|  2|----|")
+    print("~|****|~  |    |")
+    print(" |----|   |----|")
+  elseif rs.getBundledInput(sides.left, colors.orange) == 0 and rs.getBundledInput(sides.left, colors.lime) > 0 then
+    rs.setBundledOutput(sides.left, colors.red, 0)
+    rs.setBundledOutput(sides.left, colors.purple, 255)
+    print("1|----|  2|----| ")
+    print(" |    |  *|####|*")
+    print(" |----|   |----| ")
+ end
 end
 
 
@@ -106,14 +128,17 @@ do
     resetBackUp()
     os.sleep(1)
     term.clear()
-    print("Power in reactor: ", reactor.getEnergyStored())
-    print("Reactor temprature:  ", reactor.getHeatLevel())
-    print("Fuel heat: ", reactor.getFissionFuelHeat())
-    print("Number of cells in use", reactor.getNumberOfCells())
-    print("with: ", reactor.getFissionFuelName())
+    print("Power in reactor 1: ", reactor.getEnergyStored())
+    print("Power in reactor 2:", reactor2.getEnergyStored())
+    print("Reactor 1 temprature: ", reactor.getHeatLevel())
+    print("Reactor 2 temprature: ", reactor2.getHeatLevel())
+    print("Reactor 1 fuel heat: ", reactor.getFissionFuelHeat())
+    print("Reactor 2 fuel heat: ", reactor2.getFissionFuelHeat())
+    print("Reactor 1 cells in use: ", reactor.getNumberOfCells(), " with: ", reactor.getFissionFuelName())
+    print("Reactor 2 cells in use: ", reactor2.getNumberOfCells(), " with: ", reactor2.getFissionFuelName())
     print("Current cooling rate: ", reactor.getReactorCoolingRate())
-    print("Max heat level is: ", reactor.getMaxHeatLevel())
-    print("Current process time: ", reactor.getCurrentProcessTime())
+    print("Reactor 1 max heat: ", reactor.getMaxHeatLevel())
+    print("Reactor 2 max heat: ", reactor2.getMaxHeatLevel())
     print("Power in base: ", totalPowerLevel())
     print("Gas Turbine Status", turbine.getSpeed())
     print("Diesel backup level: ", ((rs.getBundledInput(sides.left, colors.cyan)/195)*100))
